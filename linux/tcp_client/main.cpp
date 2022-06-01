@@ -3,9 +3,11 @@
 
 #include <netdb.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include <cstdlib>
 #include <csignal>
+#include <ctime>
 
 int SOCK = 0;
 
@@ -15,6 +17,9 @@ bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t 
 
 void signal_handler(int signal);
 void atExitFunc();
+
+std::string hostInfo(const int &sock);
+std::string currentDateTime();
 
 int main(int argc, const char * const argv[])
 {
@@ -27,20 +32,20 @@ int main(int argc, const char * const argv[])
     if (!checkArgs(argc, argv, host, port))
         return EXIT_FAILURE;
 
-    if (!(SOCK = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)))
+    if ((SOCK = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
         std::cerr << "error socket" << std::endl;
         return EXIT_FAILURE;
     }
 
-    const struct hostent *remote_host { gethostbyname(host.c_str()) };
+    const hostent *remote_host { gethostbyname(host.c_str()) };
     if (remote_host == nullptr)
     {
         std::cerr << host << " - unknow host name or ip" << std::endl;
         return EXIT_FAILURE;
     }
 
-    struct sockaddr_in server_addr =
+    sockaddr_in server_addr =
     {
         .sin_family = AF_INET,
         .sin_port = htons(port)
@@ -76,7 +81,9 @@ void get_answer(const int &sock)
             exit(EXIT_FAILURE);
 
         buff[recv_bytes] = '\0';
-        std::cout << "\r<< " << buff << "\n>> " << std::flush;
+
+        std::cout << "\r<< " << currentDateTime() << ' ' << hostInfo(sock)
+                  << " - " << buff << "\n>> " << std::flush;
     }
 }
 
@@ -88,7 +95,8 @@ void send_request(const int &sock)
     {
         std::cout << ">> " << std::flush;
         std::getline(std::cin, buff);
-        buff += "\n";
+        if(buff.length() == 0)
+            continue;
 
         if (send(sock, (const void *)buff.data(), buff.length(), 0) <= 0)
             exit(EXIT_FAILURE);
@@ -127,4 +135,34 @@ void atExitFunc()
 {
     close(SOCK);
     std::cout << "\nClose socket.\n";
+}
+
+std::string hostInfo(const int &sock)
+{
+    std::string result;
+
+    sockaddr_in src_addr = {0};
+    socklen_t src_addr_len = sizeof(sockaddr_in);
+    char client_address_buf[INET_ADDRSTRLEN];
+
+    if (getpeername(sock, (sockaddr *)&src_addr, (socklen_t*)&src_addr_len) != 0)
+        return {};
+
+    char buff_client_name[BUFSIZ];
+    getnameinfo((sockaddr *)&src_addr, sizeof(src_addr), buff_client_name, BUFSIZ, nullptr, 0, NI_NAMEREQD);
+
+    return std::string(buff_client_name) + ' '
+            + inet_ntop(AF_INET, &src_addr.sin_addr, client_address_buf, BUFSIZ)
+            + ":" + std::to_string(ntohs(src_addr.sin_port));
+}
+
+std::string currentDateTime()
+{
+    time_t now = time(0);
+    tm tstruct;
+    char buf[32];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+
+    return buf;
 }
