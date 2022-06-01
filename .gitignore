@@ -31,4 +31,5 @@
 *.out
 *.app
 
-.user
+*.user
+build*
