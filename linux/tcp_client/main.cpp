@@ -15,7 +15,7 @@ void get_answer(const int &sock);
 void send_request(const int &sock);
 bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t &port);
 
-void signal_handler(int signal);
+void signalHandler(int signal);
 void atExitFunc();
 
 std::string hostInfo(const int &sock);
@@ -27,7 +27,7 @@ int main(int argc, const char * const argv[])
     uint64_t port = 0;
 
     atexit(atExitFunc);
-    signal(SIGINT, signal_handler);
+    signal(SIGINT, signalHandler);
 
     if (!checkArgs(argc, argv, host, port))
         return EXIT_FAILURE;
@@ -125,7 +125,7 @@ bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t 
     return true;
 }
 
-void signal_handler(int signal)
+void signalHandler(int signal)
 {
     if (signal == SIGINT)
         exit(0);
