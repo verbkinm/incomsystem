@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <iostream>
 
+#include "logger.h"
 #include "proxyserver.h"
 
 std::unique_ptr<ProxyServer> proxyServer;
@@ -15,19 +16,14 @@ int main(int argc, char const *argv[])
     atexit(atExitFunc);
     signal(SIGINT, signalHandler);
 
+    Logger::getInstance();
+
     std::string serverHost;
     uint64_t serverPort = 0,
             listenPort = 0;
 
     if (!checkArgs(argc, argv, serverHost, serverPort, listenPort))
         return EXIT_FAILURE;
-
-    const hostent *remote_host { gethostbyname(serverHost.c_str()) };
-    if (remote_host == nullptr)
-    {
-        std::cerr << serverHost << " - unknow host name or ip" << std::endl;
-        return EXIT_FAILURE;
-    }
 
     proxyServer = std::make_unique<ProxyServer>(serverHost, serverPort, listenPort);
 
@@ -43,14 +39,14 @@ void signalHandler(int signal)
 void atExitFunc()
 {
     proxyServer.reset();
-    std::cout << "\nExiting...\n";
 }
 
 bool checkArgs(int argc, const char * const argv[], std::string &serverHost, uint64_t &serverPort, uint64_t &listenPort)
 {
+    std::string msg = "Usage: " + std::string(argv[0]) + " <server host> <server port> <listen port>\n";
     if (argc != 4)
     {
-        std::cout << "Usage: " << argv[0] << " <server host> <server port> <listen port>" << std::endl;
+        Logger::write(msg);
         return false;
     }
 
@@ -62,7 +58,7 @@ bool checkArgs(int argc, const char * const argv[], std::string &serverHost, uin
     }
     catch (...)
     {
-        std::cout << "Usage: " << argv[0] << " <server host> <server port> <listen port>" << std::endl;
+        Logger::write(msg);
         return false;
     }
 

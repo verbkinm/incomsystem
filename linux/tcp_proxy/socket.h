@@ -5,6 +5,9 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
+
+#include "logger.h"
 
 class Socket
 {
@@ -28,6 +31,8 @@ public:
 
     State state() const;
     void setState(State newState);
+
+    static std::string hostInfo(int sock);
 
 protected:
     int _socket;

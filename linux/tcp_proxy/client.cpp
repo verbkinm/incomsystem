@@ -1,9 +1,15 @@
 #include "client.h"
 
-
-Client::Client(int socket)
+Client::Client(int inSocket, int outSocket) :
+    _inSocket(_socket),
+    _outSocket(outSocket)
 {
-    _socket = socket;
+    _socket = inSocket;
+}
+
+Client::~Client()
+{
+    shutdown(_outSocket, SHUT_RDWR);
 }
 
 int Client::exec()
@@ -20,31 +26,37 @@ int Client::exec()
         char buffer[BUFSIZ];
 
         FD_ZERO(&readfds);
-        FD_SET(_socket, &readfds);
+        FD_SET(_inSocket, &readfds);
 
-        if (select(_socket + 1, &readfds, NULL, NULL, &tv) == -1)
+        if (select(_inSocket + 1, &readfds, NULL, NULL, &tv) == -1)
         {
-            std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
+            LOG_ERROR_STRING
             break;
         }
 
-        if (FD_ISSET(_socket, &readfds))
+        if (FD_ISSET(_inSocket, &readfds))
         {
-            auto recv_bytes = recv(_socket, (void *)buffer, BUFSIZ - 1, 0);
-            if (recv_bytes <= 0)
+            auto bytes = recv(_inSocket, (void *)buffer, BUFSIZ - 1, 0);
+            if (bytes <= 0)
                 break;
 
-            buffer[recv_bytes] = '\0';
+            buffer[bytes] = '\0';
 
-            std::cout << general::currentDateTime()
-                      << ' '
-                      << general::hostInfo(_socket)
-                      << " - "
-                      << buffer
-                      << "\n";
+            Logger::write(hostInfo(_inSocket)
+                      + " - "
+                      + "<< "
+                      + buffer);
 
-            if (send(_socket, (const void *)buffer, recv_bytes, 0) <= 0)
+            bytes = send(_outSocket, (const void *)buffer, bytes, 0);
+            if (bytes <= 0)
                 break;
+
+            buffer[bytes] = '\0';
+
+            Logger::write(hostInfo(_outSocket)
+                      + " - "
+                      + ">> "
+                      + buffer);
         }
     }
     setState(State::Unconnected);

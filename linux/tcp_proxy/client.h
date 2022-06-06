@@ -1,14 +1,16 @@
 #pragma once
 
-#include <string.h>
-
-#include "lib.h"
 #include "socket.h"
 
 class Client : public Socket
 {
 public:
-    Client(int socket);
+    Client(int inSocket, int outSocket);
+    ~Client();
 
     int exec() override;
+
+private:
+    int &_inSocket;
+    int _outSocket;
 };

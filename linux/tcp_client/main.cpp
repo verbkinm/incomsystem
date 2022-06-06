@@ -11,8 +11,8 @@
 
 int SOCK = 0;
 
-void get_answer(const int &sock);
-void send_request(const int &sock);
+void get_answer(int sock);
+void send_request(int sock);
 bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t &port);
 
 void signalHandler(int signal);
@@ -51,9 +51,9 @@ int main(int argc, const char * const argv[])
         .sin_port = htons(port)
     };
 
-    server_addr.sin_addr.s_addr = *reinterpret_cast<const in_addr_t*>(remote_host->h_addr);
+    server_addr.sin_addr.s_addr = *(const in_addr_t*)remote_host->h_addr;
 
-    if (connect(SOCK, reinterpret_cast<const sockaddr* const>(&server_addr), sizeof(server_addr)) != 0)
+    if (connect(SOCK, (const sockaddr* const)&server_addr, sizeof(server_addr)) != 0)
     {
         std::cerr << "Error connect to " << host << ":" << port << std::endl;
         return EXIT_FAILURE;
@@ -61,8 +61,8 @@ int main(int argc, const char * const argv[])
 
     std::cout << "Connected to " << host << ":" << port << std::endl;
 
-    std::thread reciveThread(get_answer, std::ref(SOCK));
-    std::thread sendThread(send_request, std::ref(SOCK));
+    std::thread reciveThread(get_answer, SOCK);
+    std::thread sendThread(send_request, SOCK);
 
     reciveThread.join();
     sendThread.join();
@@ -70,7 +70,7 @@ int main(int argc, const char * const argv[])
     return EXIT_SUCCESS;
 }
 
-void get_answer(const int &sock)
+void get_answer(int sock)
 {
     while (true)
     {
@@ -82,12 +82,12 @@ void get_answer(const int &sock)
 
         buff[recv_bytes] = '\0';
 
-        std::cout << "\r<< " << currentDateTime() << ' ' << hostInfo(sock)
-                  << " - " << buff << "\n>> " << std::flush;
+        std::cout << "\r" << currentDateTime() << ' ' << hostInfo(sock)
+                  << " - >>" << buff << "\n>> " << std::flush;
     }
 }
 
-void send_request(const int &sock)
+void send_request(int sock)
 {
     std::string buff;
 

@@ -2,8 +2,7 @@
 
 #include <thread>
 
-#include "lib.h"
-#include "socket.h"
+#include "client.h"
 
 class ProxyServer : public Socket
 {
@@ -15,4 +14,11 @@ public:
 private:
     std::string _server_host;
     uint64_t _server_port, _listen_port;
+
+    int listenSocketCreate();
+    int inSocketCreate();
+
+    int serverAddrCreate(sockaddr_in &addr) const;
+
+    void clientThread(int inSocket, int outSocket) const;
 };
