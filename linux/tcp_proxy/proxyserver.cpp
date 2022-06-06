@@ -1,16 +1,20 @@
-#include "server.h"
+#include "proxyserver.h"
 
-Server::Server(int port) : _port(port)
+ProxyServer::ProxyServer(const std::string &serverHost, uint64_t serverPort, uint64_t listenPort) :
+    _server_host(serverHost),
+    _server_port(serverPort),
+    _listen_port(listenPort)
 {
 
 }
 
-int Server::exec()
+int ProxyServer::exec()
 {
     char buffer[BUFSIZ];
 
     _socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    std::cout << "Starting echo server on the port " << _port << "...\n";
+    std::cout << "Starting proxy server on the port " << _listen_port
+              << ", proxy to " << _server_host << ':' << _server_port << "...\n";
 
     if (_socket == -1)
     {
@@ -28,13 +32,13 @@ int Server::exec()
     sockaddr_in addr =
     {
         .sin_family = AF_INET,
-        .sin_port = htons(_port),
+        .sin_port = htons(_listen_port),
     };
 
     addr.sin_addr.s_addr = INADDR_ANY;
     int addrlen = sizeof(addr);
 
-    if (bind(_socket, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) != 0)
+    if (bind(_socket, (const sockaddr*)&addr, sizeof(addr)) != 0)
     {
         std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
         return EXIT_FAILURE;
@@ -47,7 +51,7 @@ int Server::exec()
     }
     setState(State::Listening);
 
-    std::cout << "Running echo server...\n";
+    std::cout << "Running proxy server...\n";
 
     timeval tv
     {
@@ -77,8 +81,8 @@ int Server::exec()
                 continue;
             }
 
-            std::thread th(general::clientThread, client_sock);
-            th.detach();
+//            std::thread th(general::clientThread, client_sock);
+//            th.detach();
         }
     }
     setState(State::Unconnected);

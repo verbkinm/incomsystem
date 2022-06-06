@@ -34,7 +34,7 @@ int Server::exec()
     addr.sin_addr.s_addr = INADDR_ANY;
     int addrlen = sizeof(addr);
 
-    if (bind(_socket, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) != 0)
+    if (bind(_socket, (const sockaddr*)&addr, sizeof(addr)) != 0)
     {
         std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
         return EXIT_FAILURE;

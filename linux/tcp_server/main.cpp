@@ -3,7 +3,7 @@
 
 #include "server.h"
 
-Server *server = nullptr;
+std::unique_ptr<Server> server;
 
 void signalHandler(int signal);
 void atExitFunc();
@@ -13,7 +13,7 @@ int main(int argc, char const *argv[])
     atexit(atExitFunc);
     signal(SIGINT, signalHandler);
 
-    int port;
+    uint64_t port;
 
     if (argc != 2)
     {
@@ -31,10 +31,9 @@ int main(int argc, char const *argv[])
         return EXIT_FAILURE;
     }
 
-    server = new Server(port);//std::make_unique<Server>(port);
-    server->run();
+    server = std::make_unique<Server>(port);
 
-    return EXIT_SUCCESS;
+    return server->exec();
 }
 
 void signalHandler(int signal)
@@ -45,7 +44,6 @@ void signalHandler(int signal)
 
 void atExitFunc()
 {
-    delete server;
-//    server.reset();
-    std::cout << "\nClose socket.\n";
+    server.reset();
+    std::cout << "\nExiting...\n";
 }
