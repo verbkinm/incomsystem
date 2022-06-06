@@ -1,9 +1,7 @@
 #pragma once
 
-#include <string.h>
-
-#include "lib.h"
 #include "socket.h"
+#include "logger.h"
 
 class Client : public Socket
 {

@@ -36,9 +36,9 @@ int Client::exec()
 
             buffer[recv_bytes] = '\0';
 
-            std::cout << general::currentDateTime()
+            std::cout << Logger::currentDateTime()
                       << ' '
-                      << general::hostInfo(_socket)
+                      << hostInfo(_socket)
                       << " - "
                       << buffer
                       << "\n";

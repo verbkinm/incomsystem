@@ -2,8 +2,8 @@
 
 #include <thread>
 
-#include "lib.h"
-#include "socket.h"
+#include "client.h"
+#include "logger.h"
 
 class Server : public Socket
 {
@@ -14,5 +14,7 @@ public:
 
 private:
     int _port;
+
+    void clientThread(int socket) const;
 };
 

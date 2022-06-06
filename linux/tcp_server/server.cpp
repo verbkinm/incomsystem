@@ -77,11 +77,24 @@ int Server::exec()
                 continue;
             }
 
-            std::thread th(general::clientThread, client_sock);
+            std::thread th(&Server::clientThread, this, client_sock);
             th.detach();
         }
     }
     setState(State::Unconnected);
 
     return EXIT_SUCCESS;
+}
+
+void Server::clientThread(int socket) const
+{
+    auto hInfo = hostInfo(socket);
+
+    Logger::write(hInfo + " - connected");
+
+    Client client(socket);
+    client.setState(Socket::State::Connected);
+    client.exec();
+
+    Logger::write(hInfo + " - disconnected");
 }

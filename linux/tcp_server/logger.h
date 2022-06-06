@@ -6,7 +6,7 @@
 #include <string.h>
 
 #define LOG_ERROR_STRING Logger::error(std::string(__PRETTY_FUNCTION__) + ", line:" + std::to_string(__LINE__) + " - error message: ");
-#define LOG_FILE_NAME "tcp_proxy.log"
+#define LOG_FILE_NAME "tcp_server.log"
 
 class Logger
 {

@@ -39,6 +39,6 @@ std::string Socket::hostInfo(int sock)
     return std::string(buff_client_name)
             + ' '
             + inet_ntop(AF_INET, &src_addr.sin_addr, client_address_buf, BUFSIZ)
-            + ":"
+            + ':'
             + std::to_string(ntohs(src_addr.sin_port));
 }
