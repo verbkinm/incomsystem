@@ -10,7 +10,7 @@ int Client::exec()
 {
     timeval tv
     {
-        tv.tv_sec = 3,
+        tv.tv_sec = SOCKET_TIMEOUT,
         tv.tv_usec = 0
     };
     fd_set readfds;
@@ -24,7 +24,7 @@ int Client::exec()
 
         if (select(_socket + 1, &readfds, NULL, NULL, &tv) == -1)
         {
-            std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
+            LOG_ERROR_STRING
             break;
         }
 
@@ -36,15 +36,18 @@ int Client::exec()
 
             buffer[recv_bytes] = '\0';
 
-            std::cout << Logger::currentDateTime()
-                      << ' '
-                      << hostInfo(_socket)
-                      << " - "
-                      << buffer
-                      << "\n";
+            Logger::write(hostInfo(_socket)
+                      + " - "
+                      + "<< "
+                      + buffer);
 
             if (send(_socket, (const void *)buffer, recv_bytes, 0) <= 0)
                 break;
+
+            Logger::write(hostInfo(_socket)
+                      + " - "
+                      + ">> "
+                      + buffer);
         }
     }
     setState(State::Unconnected);

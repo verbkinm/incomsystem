@@ -1,6 +1,6 @@
 #include "socket.h"
 
-Socket::Socket() : _state(Unconnected)
+Socket::Socket() : _state(Unconnected), SOCKET_TIMEOUT(3)
 {
 
 }

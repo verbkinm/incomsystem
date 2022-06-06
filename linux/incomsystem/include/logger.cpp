@@ -1,7 +1,7 @@
 #include "logger.h"
 
 std::ofstream Logger::_file(LOG_FILE_NAME, std::ios::app);
-std::mutex Logger::_file_mutex;
+std::mutex Logger::_write_mutex;
 
 Logger::Logger()
 {
@@ -34,17 +34,16 @@ Logger::~Logger()
     std::cout << str;
 }
 
-Logger &Logger::getInstance()
+void Logger::init()
 {
     static Logger instance;
-    return instance;
 }
 
 void Logger::write(const std::string &str)
 {
     std::string result = currentDateTime() + " - " + str + '\n';
 
-    std::lock_guard lg(_file_mutex);
+    std::lock_guard lg(_write_mutex);
 
     if (!_file.is_open())
     {

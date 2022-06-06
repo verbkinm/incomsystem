@@ -16,7 +16,7 @@ int Client::exec()
 {
     timeval tv
     {
-        tv.tv_sec = 3,
+        tv.tv_sec = SOCKET_TIMEOUT,
         tv.tv_usec = 0
     };
     fd_set readfds;

@@ -7,8 +7,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#include "logger.h"
-
 class Socket
 {
 public:
@@ -36,6 +34,8 @@ public:
 
 protected:
     int _socket;
+
+    const int SOCKET_TIMEOUT;
 
 private:
     std::mutex state_mutex;

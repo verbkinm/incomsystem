@@ -7,21 +7,20 @@ Server::Server(int port) : _port(port)
 
 int Server::exec()
 {
-    char buffer[BUFSIZ];
-
     _socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    std::cout << "Starting echo server on the port " << _port << "...\n";
+    Logger::write("Starting echo server on the port " + std::to_string(_port) + "...");
 
     if (_socket == -1)
     {
-        std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
+        LOG_ERROR_STRING
         return EXIT_FAILURE;
     }
 
     int enable = 1;
     if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
     {
-        std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
+        LOG_ERROR_STRING
+        close(_socket);
         return EXIT_FAILURE;
     }
 
@@ -36,22 +35,24 @@ int Server::exec()
 
     if (bind(_socket, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) != 0)
     {
-        std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
+        LOG_ERROR_STRING
+        close(_socket);
         return EXIT_FAILURE;
     }
 
     if (listen(_socket, 0) < 0)
     {
-        std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
+        LOG_ERROR_STRING
+        close(_socket);
         return EXIT_FAILURE;
     }
     setState(State::Listening);
 
-    std::cout << "Running echo server...\n";
+    Logger::write("Running echo server...");
 
     timeval tv
     {
-        tv.tv_sec = 3,
+        tv.tv_sec = SOCKET_TIMEOUT,
         tv.tv_usec = 0
     };
     fd_set readfds;
@@ -63,7 +64,7 @@ int Server::exec()
 
         if (select(_socket + 1, &readfds, NULL, NULL, &tv) == -1)
         {
-            std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
+            LOG_ERROR_STRING
             break;
         }
 
@@ -72,7 +73,7 @@ int Server::exec()
             int client_sock;
             if ( (client_sock = accept(_socket, (sockaddr *)&addr, (socklen_t*)&addrlen)) < 0)
             {
-                std::cerr << strerror_r(errno, &buffer[0], BUFSIZ) << std::endl;
+                LOG_ERROR_STRING
                 setState(State::Closing);
                 continue;
             }

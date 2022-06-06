@@ -3,7 +3,6 @@
 #include <thread>
 
 #include "client.h"
-#include "logger.h"
 
 class Server : public Socket
 {

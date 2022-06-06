@@ -1,7 +1,5 @@
 #include <signal.h>
-#include <iostream>
 
-#include "logger.h"
 #include "proxyserver.h"
 
 std::unique_ptr<ProxyServer> proxyServer;
@@ -16,11 +14,10 @@ int main(int argc, char const *argv[])
     atexit(atExitFunc);
     signal(SIGINT, signalHandler);
 
-    Logger::getInstance();
+    Logger::init();
 
     std::string serverHost;
-    uint64_t serverPort = 0,
-            listenPort = 0;
+    uint64_t serverPort, listenPort;
 
     if (!checkArgs(argc, argv, serverHost, serverPort, listenPort))
         return EXIT_FAILURE;
@@ -43,7 +40,7 @@ void atExitFunc()
 
 bool checkArgs(int argc, const char * const argv[], std::string &serverHost, uint64_t &serverPort, uint64_t &listenPort)
 {
-    std::string msg = "Usage: " + std::string(argv[0]) + " <server host> <server port> <listen port>\n";
+    std::string msg = "Usage: " + std::string(argv[0]) + " <server host> <server port> <listen port>";
     if (argc != 4)
     {
         Logger::write(msg);
