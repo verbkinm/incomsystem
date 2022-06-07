@@ -58,6 +58,7 @@ int Client::exec()
                       + ">> "
                       + buffer);
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     setState(State::Unconnected);
 

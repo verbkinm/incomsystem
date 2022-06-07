@@ -81,6 +81,7 @@ int Server::exec()
             std::thread th(&Server::clientThread, this, client_sock);
             th.detach();
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     setState(State::Unconnected);
 

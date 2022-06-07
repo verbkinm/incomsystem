@@ -1,5 +1,7 @@
 #pragma once
 
+#include <thread>
+
 #include "socket.h"
 #include "logger.h"
 
