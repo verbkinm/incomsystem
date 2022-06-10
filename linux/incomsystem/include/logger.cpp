@@ -1,5 +1,6 @@
 #include "logger.h"
 
+// создание объекта file для работы с файлом и открытие файла в режиме дозаписи
 std::ofstream Logger::_file(LOG_FILE_NAME, std::ios::app);
 std::mutex Logger::_write_mutex;
 
@@ -43,6 +44,7 @@ void Logger::write(const std::string &str)
 {
     std::string result = currentDateTime() + " - " + str + '\n';
 
+    // блокировка мьютекса на время записи в файл и вывода в консоль.
     std::lock_guard lg(_write_mutex);
 
     if (!_file.is_open())

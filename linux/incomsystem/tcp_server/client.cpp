@@ -23,7 +23,7 @@ int Client::exec()
 
         if (select(_socket + 1, &readfds, NULL, NULL, &tv) == -1)
         {
-            LOG_ERROR_STRING
+            LOG_ERROR_STRING;
             break;
         }
 

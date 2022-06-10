@@ -4,20 +4,28 @@
 #include "logger.h"
 #include "socket.h"
 
+// переменная для хранения сокета
 static int SOCKET;
 
+// функция для ожидания приёма данных
 void getAnswer(int sock);
+// функция для отправки данных
 void sendRequest(int sock);
+// функция для проверки аргументов командной строки
 bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t &port);
 
+// оббработчик сигналов
 void signalHandler(int signal);
+// функция перед завершением программы
 void atExitFunc();
 
 int main(int argc, const char * const argv[])
 {
+    // объявляем функцию завершения программы и обработчик сигнала SIGINT
     atexit(atExitFunc);
     signal(SIGINT, signalHandler);
 
+    // инициализируем Logger
     Logger::init();
 
     std::string host;
@@ -30,17 +38,19 @@ int main(int argc, const char * const argv[])
 
     if ((SOCKET = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
-        LOG_ERROR_STRING
-                return EXIT_FAILURE;
+        LOG_ERROR_STRING;
+        return EXIT_FAILURE;
     }
 
+    // получение указателя на структуру hostent из переменной host
     const hostent *remote_host { gethostbyname(host.c_str()) };
     if (remote_host == nullptr)
     {
-        LOG_ERROR_STRING
-                return EXIT_FAILURE;
+        LOG_ERROR_STRING;
+        return EXIT_FAILURE;
     }
 
+    // структура адреса для сервера
     server_addr =
     {
         .sin_family = AF_INET,
@@ -48,17 +58,21 @@ int main(int argc, const char * const argv[])
     };
     server_addr.sin_addr.s_addr = *(const in_addr_t*)remote_host->h_addr;
 
+    // соединение с сервером
     if (connect(SOCKET, (const sockaddr* const)&server_addr, sizeof(server_addr)) != 0)
     {
-        LOG_ERROR_STRING
-                return EXIT_FAILURE;
+        LOG_ERROR_STRING;
+        return EXIT_FAILURE;
     }
 
     Logger::write("Connected to " + Socket::hostInfo(SOCKET));
 
+    // поток для получения данных от сервера
     std::thread reciveThread(getAnswer, SOCKET);
+    // в этой функции вводятся данные для отправки на сервер
     sendRequest(SOCKET);
 
+    // ожидание завершения потока reciveThread
     reciveThread.join();
 
     return EXIT_SUCCESS;
@@ -70,6 +84,7 @@ void getAnswer(int sock)
 
     while (true)
     {
+        // ожидание получения данных с сервера
         auto recv_bytes = recv(sock, (void *)buffer, BUFSIZ - 1, 0);
         if (recv_bytes <= 0)
         {
@@ -79,9 +94,12 @@ void getAnswer(int sock)
 
         buffer[recv_bytes] = '\0';
 
+        // вывод полученных данных в консоль и запись в лог файл
         Logger::write(Socket::hostInfo(sock)
                       + " - << "
                       + buffer);
+
+        // задержка используется для разгрузки процессора
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
@@ -92,14 +110,17 @@ void sendRequest(int sock)
 
     while (true)
     {
+        // ввод данных для отправки
         std::getline(std::cin, buffer);
 
-        if(buffer.length() == 0)
+        if (buffer.length() == 0)
             continue;
 
+        // отправка на сервер
         if (send(sock, (const void *)buffer.data(), buffer.length(), 0) <= 0)
             exit(EXIT_FAILURE);
 
+        // вывод полученных данных в консоль и запись в лог файл
         Logger::write(Socket::hostInfo(sock)
                       + " - >> "
                       + buffer);
@@ -109,6 +130,7 @@ void sendRequest(int sock)
 bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t &port)
 {
     std::string msg = "Usage: " + std::string(argv[0]) + " <host> <port>";
+    // если количество введённых аргументов не соответствует 3 выводим сообщение и завершает программу
     if (argc != 3)
     {
         Logger::write(msg);
@@ -118,6 +140,7 @@ bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t 
     try
     {
         host = argv[1];
+        // stoull может выкинуть исключение, по этому оборачиваем этот код в блок try catch
         port = std::stoull(argv[2]);
     }
     catch (...)
@@ -131,6 +154,7 @@ bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t 
 
 void signalHandler(int signal)
 {
+    // при получении сигнала
     if (signal == SIGINT)
         exit(0);
 }

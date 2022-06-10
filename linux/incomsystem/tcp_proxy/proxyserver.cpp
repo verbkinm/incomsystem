@@ -35,7 +35,7 @@ int ProxyServer::exec()
 
         if (select(_socket + 1, &readfds, NULL, NULL, &tv) == -1)
         {
-            LOG_ERROR_STRING
+            LOG_ERROR_STRING;
             break;
         }
 
@@ -48,7 +48,7 @@ int ProxyServer::exec()
 
             if ((outSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
             {
-                LOG_ERROR_STRING
+                LOG_ERROR_STRING;
                 close(inSocket);
                 break;
             }
@@ -87,7 +87,6 @@ int ProxyServer::listenSocketCreate()
     };
     addr.sin_addr.s_addr = INADDR_ANY;
 
-    auto sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     Logger::write("Starting proxy server on the port "
                   + std::to_string(_listen_port)
                   + ", proxy to "
@@ -95,31 +94,31 @@ int ProxyServer::listenSocketCreate()
                   + ':'
                   + std::to_string(_server_port)
                   + "...");
-
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == -1)
     {
-        LOG_ERROR_STRING
+        LOG_ERROR_STRING;
         return -1;
     }
 
     int enable = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
     {
-        LOG_ERROR_STRING
+        LOG_ERROR_STRING;
         close(sock);
         return -1;
     }
 
     if (bind(sock, (const sockaddr*)&addr, sizeof(addr)) != 0)
     {
-        LOG_ERROR_STRING
+        LOG_ERROR_STRING;
         close(sock);
         return -1;
     }
 
     if (listen(sock, 0) < 0)
     {
-        LOG_ERROR_STRING
+        LOG_ERROR_STRING;
         close(sock);
         return -1;
     }
@@ -138,7 +137,7 @@ int ProxyServer::inSocketCreate()
 
     if (sock < 0)
     {
-        LOG_ERROR_STRING
+        LOG_ERROR_STRING;
         setState(State::Closing);
         return -1;
     }

@@ -12,15 +12,14 @@ int Server::exec()
 
     if (_socket == -1)
     {
-        LOG_ERROR_STRING
+        LOG_ERROR_STRING;
         return EXIT_FAILURE;
     }
 
     int enable = 1;
     if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
     {
-        LOG_ERROR_STRING
-        close(_socket);
+        LOG_ERROR_STRING;
         return EXIT_FAILURE;
     }
 
@@ -29,21 +28,19 @@ int Server::exec()
         .sin_family = AF_INET,
         .sin_port = htons(_port),
     };
-
     addr.sin_addr.s_addr = INADDR_ANY;
+
     int addrlen = sizeof(addr);
 
-    if (bind(_socket, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) != 0)
+    if (bind(_socket, (const sockaddr*)&addr, sizeof(addr) != 0))
     {
-        LOG_ERROR_STRING
-        close(_socket);
+        LOG_ERROR_STRING;
         return EXIT_FAILURE;
     }
 
     if (listen(_socket, 0) < 0)
     {
-        LOG_ERROR_STRING
-        close(_socket);
+        LOG_ERROR_STRING;
         return EXIT_FAILURE;
     }
     setState(State::Listening);
@@ -64,7 +61,7 @@ int Server::exec()
 
         if (select(_socket + 1, &readfds, NULL, NULL, &tv) == -1)
         {
-            LOG_ERROR_STRING
+            LOG_ERROR_STRING;
             break;
         }
 
@@ -73,7 +70,7 @@ int Server::exec()
             int client_sock;
             if ( (client_sock = accept(_socket, (sockaddr *)&addr, (socklen_t*)&addrlen)) < 0)
             {
-                LOG_ERROR_STRING
+                LOG_ERROR_STRING;
                 setState(State::Closing);
                 continue;
             }

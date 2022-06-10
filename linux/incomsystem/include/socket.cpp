@@ -7,8 +7,8 @@ Socket::Socket() : _state(Unconnected), SOCKET_TIMEOUT(3)
 
 Socket::~Socket()
 {
+    // Прекращение соединение и закрытие сокета
     shutdown(_socket, SHUT_RDWR);
-    close(_socket);
 }
 
 Socket::State Socket::state() const
@@ -29,6 +29,9 @@ std::string Socket::hostInfo(int sock)
     sockaddr_in src_addr = {0};
     socklen_t src_addr_len = sizeof(sockaddr_in);
     char client_address_buf[INET_ADDRSTRLEN];
+
+
+    // Получение адреса клиента по сокету
 
     if (getpeername(sock, (sockaddr *)&src_addr, (socklen_t*)&src_addr_len) != 0)
         return {std::to_string(sock)};
