@@ -14,7 +14,7 @@ void sendRequest(int sock);
 // функция для проверки аргументов командной строки
 bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t &port);
 
-// оббработчик сигналов
+// обработчик сигналов
 void signalHandler(int signal);
 // функция перед завершением программы
 void atExitFunc();
@@ -33,10 +33,12 @@ int main(int argc, const char * const argv[])
 
     sockaddr_in server_addr;
 
+    // проверка аргументов командной строки
     if (!checkArgs(argc, argv, host, port))
         return EXIT_FAILURE;
 
-    if ((SOCKET = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+    // создание сокета ip4 TCP
+    if ((SOCKET = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         LOG_ERROR_STRING;
         return EXIT_FAILURE;
@@ -64,7 +66,13 @@ int main(int argc, const char * const argv[])
         LOG_ERROR_STRING;
         return EXIT_FAILURE;
     }
-
+    // установка опций для сокета - привязку к порту даже если он еще находится в состоянии TIME_WAIT
+    int enable = 1;
+    if (setsockopt(SOCKET, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    {
+        LOG_ERROR_STRING;
+        return EXIT_FAILURE;
+    }
     Logger::write("Connected to " + Socket::hostInfo(SOCKET));
 
     // поток для получения данных от сервера
@@ -130,7 +138,7 @@ void sendRequest(int sock)
 bool checkArgs(int argc, const char * const argv[], std::string &host, uint64_t &port)
 {
     std::string msg = "Usage: " + std::string(argv[0]) + " <host> <port>";
-    // если количество введённых аргументов не соответствует 3 выводим сообщение и завершает программу
+    // если количество введённых аргументов не соответствует 2 выводим сообщение и завершает программу
     if (argc != 3)
     {
         Logger::write(msg);
@@ -162,5 +170,4 @@ void signalHandler(int signal)
 void atExitFunc()
 {
     shutdown(SOCKET, SHUT_RDWR);
-    close(SOCKET);
 }

@@ -14,6 +14,7 @@ public:
     int exec() override;
 
 private:
+    // сокеты для связи клиента  - прокси сервера и прокси сервара - сервера
     int &_inSocket;
     int _outSocket;
 };

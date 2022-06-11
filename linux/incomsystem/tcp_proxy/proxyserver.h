@@ -15,10 +15,12 @@ private:
     std::string _server_host;
     uint64_t _server_port, _listen_port;
 
+
+    // методы для уменьшения кода в методе exec
     int listenSocketCreate();
     int inSocketCreate();
-
     int serverAddrCreate(sockaddr_in &addr) const;
 
+    // метод для создания новых подключенных клиентов
     void clientThread(int inSocket, int outSocket) const;
 };

@@ -30,7 +30,6 @@ std::string Socket::hostInfo(int sock)
     socklen_t src_addr_len = sizeof(sockaddr_in);
     char client_address_buf[INET_ADDRSTRLEN];
 
-
     // Получение адреса клиента по сокету
 
     if (getpeername(sock, (sockaddr *)&src_addr, (socklen_t*)&src_addr_len) != 0)

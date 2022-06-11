@@ -47,6 +47,7 @@ void Logger::write(const std::string &str)
     // блокировка мьютекса на время записи в файл и вывода в консоль.
     std::lock_guard lg(_write_mutex);
 
+    // проверка открытия файла
     if (!_file.is_open())
     {
         std::cerr << currentDateTime()
@@ -61,6 +62,7 @@ void Logger::write(const std::string &str)
 
 void Logger::error(const std::string &str)
 {
+    // буфер для текстовой интерпритации ошибки
     char buffer[BUFSIZ];
     Logger::write(str + ' ' + strerror_r(errno, &buffer[0], BUFSIZ));
 }

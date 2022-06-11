@@ -12,8 +12,10 @@ public:
     int exec() override;
 
 private:
+    // порт, на котором сервер будет принимать соединения
     int _port;
 
+    // метод для создания новых подключенных клиентов
     void clientThread(int socket) const;
 };
 

@@ -2,43 +2,40 @@
 
 #include "server.h"
 
-std::unique_ptr<Server> server;
-
+// обработчик сигналов
 void signalHandler(int signal);
-void atExitFunc();
-
+// функция для проверки аргументов командной строки
 bool checkArgs(int argc, const char * const argv[], uint64_t &listenPort);
 
 int main(int argc, char const *argv[])
 {
-    atexit(atExitFunc);
+    // объявляем функцию обработчика сигнала SIGINT
     signal(SIGINT, signalHandler);
 
+    // инициализируем Logger
     Logger::init();
 
     uint64_t listenPort;
 
+    // проверка аргументов командной строки
     if (!checkArgs(argc, argv, listenPort))
         return EXIT_FAILURE;
 
-    server = std::make_unique<Server>(listenPort);
-
-    return server->exec();
+    // создание объекта класса Server и его запуск
+    Server server(listenPort);
+    server.exec();
 }
 
 void signalHandler(int signal)
 {
+    // необходимо для корректного вызова деструктора для объекта server в main
     if (signal == SIGINT)
         exit(0);
 }
 
-void atExitFunc()
-{
-    server.reset();
-}
-
 bool checkArgs(int argc, const char * const argv[], uint64_t &listenPort)
 {
+    // если количество введённых аргументов не соответствует 2 выводим сообщение и завершает программу
     std::string msg = "Usage: " + std::string(argv[0]) + " <listen port>";
     if (argc != 2)
     {
@@ -48,6 +45,7 @@ bool checkArgs(int argc, const char * const argv[], uint64_t &listenPort)
 
     try
     {
+        // stoull может выкинуть исключение, по этому оборачиваем этот код в блок try catch
         listenPort = std::stoull(argv[1]);
     }
     catch (...)

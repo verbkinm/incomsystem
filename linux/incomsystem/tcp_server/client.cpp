@@ -7,6 +7,7 @@ Client::Client(int socket)
 
 int Client::exec()
 {
+    // необходимо для функции select
     timeval tv
     {
         tv.tv_sec = SOCKET_TIMEOUT,
@@ -14,13 +15,17 @@ int Client::exec()
     };
     fd_set readfds;
 
+    // запуск основного цикла клиента
     while (state() == State::Connected)
     {
+        // буфер для данных приёма и передачи
         char buffer[BUFSIZ];
 
+        // необходимо для функции select
         FD_ZERO(&readfds);
         FD_SET(_socket, &readfds);
 
+        // таймаут для recv
         if (select(_socket + 1, &readfds, NULL, NULL, &tv) == -1)
         {
             LOG_ERROR_STRING;
@@ -29,6 +34,7 @@ int Client::exec()
 
         if (FD_ISSET(_socket, &readfds))
         {
+            // получение данных
             auto recv_bytes = recv(_socket, (void *)buffer, BUFSIZ - 1, 0);
             if (recv_bytes <= 0)
                 break;
@@ -40,6 +46,7 @@ int Client::exec()
                       + "<< "
                       + buffer);
 
+            // отправка данных
             if (send(_socket, (const void *)buffer, recv_bytes, 0) <= 0)
                 break;
 
@@ -48,6 +55,7 @@ int Client::exec()
                       + ">> "
                       + buffer);
         }
+        // задержка используется для разгрузки процессора
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     setState(State::Unconnected);
