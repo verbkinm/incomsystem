@@ -3,6 +3,7 @@
 Client::Client(int socket)
 {
     _socket = socket;
+    _state = State::Connected;
 }
 
 int Client::exec()
@@ -58,7 +59,7 @@ int Client::exec()
         // задержка используется для разгрузки процессора
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    setState(State::Unconnected);
+    _state = State::Unconnected;
 
     return EXIT_SUCCESS;
 }

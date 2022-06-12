@@ -8,7 +8,14 @@ Socket::Socket() : _state(Unconnected), SOCKET_TIMEOUT(3)
 Socket::~Socket()
 {
     // Прекращение соединение и закрытие сокета
+    if (_state != Unconnected)
+        shutdown(_socket, SHUT_RDWR);
+}
+
+void Socket::stop()
+{
     shutdown(_socket, SHUT_RDWR);
+    _state = Unconnected;
 }
 
 Socket::State Socket::state() const
@@ -16,10 +23,9 @@ Socket::State Socket::state() const
     return _state;
 }
 
-void Socket::setState(State newState)
+int Socket::getSocket() const
 {
-    std::lock_guard lg(state_mutex);
-    _state = newState;
+    return _socket;
 }
 
 std::string Socket::hostInfo(int sock)

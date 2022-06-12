@@ -84,7 +84,7 @@ int ProxyServer::exec()
         // задержка используется для разгрузки процессора
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    setState(State::Unconnected);
+    _state = State::Unconnected;
 
     return EXIT_SUCCESS;
 }
@@ -139,7 +139,7 @@ int ProxyServer::listenSocketCreate()
         close(sock);
         return -1;
     }
-    setState(State::Listening);
+    _state = State::Listening;
 
     return sock;
 }
@@ -155,7 +155,7 @@ int ProxyServer::inSocketCreate()
     if (sock < 0)
     {
         LOG_ERROR_STRING;
-        setState(State::Closing);
+        _state = State::Closing;
         return -1;
     }
 
@@ -194,7 +194,6 @@ void ProxyServer::clientThread(int inSocket, int outSocket) const
 
     // объект клиент, состояние - подключен, так как сокет уже был создан
     Client client(inSocket, outSocket);
-    client.setState(Socket::State::Connected);
     client.exec();
 
     Logger::write(hInfo + " - disconnected");

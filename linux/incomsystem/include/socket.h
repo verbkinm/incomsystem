@@ -30,17 +30,23 @@ public:
 
     // Виртуальный нулевой метод для переопределяния в потомках
     virtual int exec() = 0;
+    void stop();
 
-    // Методы получения и установки состояний
+    // Методы получения состояния соединения
     State state() const;
-    void setState(State newState);
+
+    // получить сокет
+    int getSocket() const;
 
     // Метод получения информации о сокете в виде строки
     static std::string hostInfo(int sock);
 
+
 protected:
     // Хранение самого сокета
     int _socket;
+    // Состояние сокета
+    State _state;
 
     // Таймаут, используется для предотвращения постоянной блокировки на функциях recv
     const int SOCKET_TIMEOUT;
@@ -48,6 +54,4 @@ protected:
 private:
     // мьютекс для переключения состояний сокета
     std::mutex state_mutex;
-    // Состояние сокета
-    State _state;
 };

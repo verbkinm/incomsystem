@@ -8,5 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories("../include")
 
 add_executable(tcp_client main.cpp
+    simplyclient.h simplyclient.cpp
     ../include/socket.h ../include/socket.cpp
     ../include/logger.h ../include/logger.cpp)

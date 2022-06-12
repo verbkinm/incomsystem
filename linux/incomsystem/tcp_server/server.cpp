@@ -48,7 +48,7 @@ int Server::exec()
         LOG_ERROR_STRING;
         return EXIT_FAILURE;
     }
-    setState(State::Listening);
+    _state = State::Listening;
 
     Logger::write("Running echo server...");
 
@@ -81,7 +81,6 @@ int Server::exec()
             if ( (client_sock = accept(_socket, (sockaddr *)&addr, (socklen_t*)&addrlen)) < 0)
             {
                 LOG_ERROR_STRING;
-                setState(State::Closing);
                 continue;
             }
 
@@ -92,7 +91,7 @@ int Server::exec()
         // задержка используется для разгрузки процессора
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    setState(State::Unconnected);
+    _state = State::Unconnected;
 
     return EXIT_SUCCESS;
 }
@@ -106,7 +105,6 @@ void Server::clientThread(int socket) const
 
     // объект клиент, состояние - подключен, так как сокет уже был создан
     Client client(socket);
-    client.setState(Socket::State::Connected);
     // запуск основного цикла
     client.exec();
 
