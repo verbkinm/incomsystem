@@ -26,7 +26,9 @@ add_executable(Tests tst_tests.cpp
     ../tcp_server/client.h ../tcp_server/client.cpp
     ../tcp_server/server.h ../tcp_server/server.cpp
     ../include/socket.h ../include/socket.cpp
-    ../include/logger.h ../include/logger.cpp)
+    ../include/logger.h ../include/logger.cpp
+    ../include/baseserver.h ../include/baseserver.cpp)
+
 add_test(NAME Tests COMMAND Tests)
 
 target_link_libraries(Tests PRIVATE Qt${QT_VERSION_MAJOR}::Test)

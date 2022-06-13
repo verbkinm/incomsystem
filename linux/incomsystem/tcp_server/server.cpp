@@ -1,54 +1,15 @@
 #include "server.h"
 
-Server::Server(int port) : _port(port)
+Server::Server(int port) : BaseServer()
 {
-
+    _listenPort = port;
 }
 
 int Server::exec()
 {
-    // создание сокета ip4 TCP
-    _socket = socket(AF_INET, SOCK_STREAM, 0);
-    Logger::write("Starting echo server on the port " + std::to_string(_port) + "...");
-
-    if (_socket == -1)
-    {
-        LOG_ERROR_STRING;
+    // создание сокета ip4 TCP, на котором будет слушать сервер
+    if ((_socket = listenSocketCreate()) == -1)
         return EXIT_FAILURE;
-    }
-
-    // установка опций для сокета - привязку к порту даже если он еще находится в состоянии TIME_WAIT
-    int enable = 1;
-    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-    {
-        LOG_ERROR_STRING;
-        return EXIT_FAILURE;
-    }
-
-    // структура адреса для сервера
-    sockaddr_in addr =
-    {
-        .sin_family = AF_INET,
-        .sin_port = htons(_port),
-    };
-    addr.sin_addr.s_addr = INADDR_ANY;
-
-    int addrlen = sizeof(addr);
-
-    // связывание сокета и адреса
-    if (bind(_socket, (const sockaddr*)&addr, sizeof(addr)) != 0)
-    {
-        LOG_ERROR_STRING;
-        return EXIT_FAILURE;
-    }
-
-    // слушать соединения на сокете
-    if (listen(_socket, 0) < 0)
-    {
-        LOG_ERROR_STRING;
-        return EXIT_FAILURE;
-    }
-    _state = State::Listening;
 
     Logger::write("Running echo server...");
 
@@ -59,6 +20,9 @@ int Server::exec()
         tv.tv_usec = 0
     };
     fd_set readfds;
+
+    sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
 
     // запуск основного цикла
     while(state() == State::Listening)
@@ -96,8 +60,9 @@ int Server::exec()
     return EXIT_SUCCESS;
 }
 
-void Server::clientThread(int socket) const
+void Server::clientThread(int socket)
 {
+    _session++;
     // сохраняем информацию о сокете
     auto hInfo = hostInfo(socket);
 
@@ -109,4 +74,5 @@ void Server::clientThread(int socket) const
     client.exec();
 
     Logger::write(hInfo + " - disconnected");
+    _session--;
 }

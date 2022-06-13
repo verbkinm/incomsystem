@@ -2,10 +2,9 @@
 
 ProxyServer::ProxyServer(const std::string &serverHost, uint64_t serverPort, uint64_t listenPort) :
     _server_host(serverHost),
-    _server_port(serverPort),
-    _listen_port(listenPort)
+    _server_port(serverPort)
 {
-
+    _listenPort = listenPort;
 }
 
 int ProxyServer::exec()
@@ -17,6 +16,14 @@ int ProxyServer::exec()
     // создание сокета ip4 TCP, на котором будет слушать прокси сервер
     if ((_socket = listenSocketCreate()) == -1)
         return EXIT_FAILURE;
+
+    Logger::write("Starting proxy server on the port "
+                  + std::to_string(_listenPort)
+                  + ", proxy to "
+                  + _server_host
+                  + ':'
+                  + std::to_string(_server_port)
+                  + "...");
 
     // наполнение структы sockaddr_in по переданному параметру в консоли server_host
     if (serverAddrCreate(server_addr) == -1)
@@ -89,61 +96,6 @@ int ProxyServer::exec()
     return EXIT_SUCCESS;
 }
 
-int ProxyServer::listenSocketCreate()
-{
-    // структура адреса для сервера
-    sockaddr_in addr =
-    {
-        .sin_family = AF_INET,
-        .sin_port = htons(_listen_port),
-    };
-    addr.sin_addr.s_addr = INADDR_ANY;
-
-    Logger::write("Starting proxy server on the port "
-                  + std::to_string(_listen_port)
-                  + ", proxy to "
-                  + _server_host
-                  + ':'
-                  + std::to_string(_server_port)
-                  + "...");
-
-    // создание сокета ip4 TCP
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock == -1)
-    {
-        LOG_ERROR_STRING;
-        return -1;
-    }
-
-    // установка опций для сокета - привязку к порту даже если он еще находится в состоянии TIME_WAIT
-    int enable = 1;
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-    {
-        LOG_ERROR_STRING;
-        close(sock);
-        return -1;
-    }
-
-    // связывание сокета и адреса
-    if (bind(sock, (const sockaddr*)&addr, sizeof(addr)) != 0)
-    {
-        LOG_ERROR_STRING;
-        close(sock);
-        return -1;
-    }
-
-    // слушать соединения на сокете
-    if (listen(sock, 0) < 0)
-    {
-        LOG_ERROR_STRING;
-        close(sock);
-        return -1;
-    }
-    _state = State::Listening;
-
-    return sock;
-}
-
 int ProxyServer::inSocketCreate()
 {
     sockaddr_in addr;
@@ -185,8 +137,9 @@ int ProxyServer::serverAddrCreate(sockaddr_in &addr) const
     return 0;
 }
 
-void ProxyServer::clientThread(int inSocket, int outSocket) const
+void ProxyServer::clientThread(int inSocket, int outSocket)
 {
+    _session++;
     // сохраняем информацию о сокете
     auto hInfo = hostInfo(inSocket);
 
@@ -197,5 +150,6 @@ void ProxyServer::clientThread(int inSocket, int outSocket) const
     client.exec();
 
     Logger::write(hInfo + " - disconnected");
+    _session--;
 }
 

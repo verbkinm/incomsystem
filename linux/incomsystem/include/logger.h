@@ -11,28 +11,40 @@
 // Имя лог файла
 #define LOG_FILE_NAME "log.txt"
 
-
 // Класс Logger создан на основе паттерна Singleton
 class Logger
 {
 private:
     // объект для работы с лог-файлом
     static std::ofstream _file;
-    // используеися для конкурентной записи в файл
+
+    // используется для конкурентной записи в файл
     static std::mutex _write_mutex;
 
-    Logger();
+    //флаг записи
+    static uint8_t _flags;
+
+
+    Logger(int flags);
     ~Logger();
 
     // удаление остальных конструкторов
+    Logger() = delete;
     Logger(const Logger &) = delete;
     Logger(Logger &&) = delete;
     Logger& operator=(const Logger &) = delete;
     Logger& operator=(Logger &&) = delete;
 
 public:
+    enum writeType
+    {
+        NONE = 0,
+        CONSOLE = 1,
+        FILE = 2,
+    };
+
     // метод инициализации объекта Logger
-    static void init();
+    static void init(int flags = CONSOLE | FILE);
 
     // строка с текущей датой и временем
     static std::string currentDateTime();

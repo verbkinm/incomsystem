@@ -39,6 +39,8 @@ int SimplyClient::exec()
     }
 
     _state = State::Connected;
+    _session++;
+
     // установка опций для сокета - привязку к порту даже если он еще находится в состоянии TIME_WAIT
     int enable = 1;
     if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
@@ -50,11 +52,12 @@ int SimplyClient::exec()
 
     // поток для получения данных от сервера
     std::thread reciveThread(&SimplyClient::getAnswer, this);
-    // в этой функции вводятся данные для отправки на сервер
-    sendRequest();
+    // поток для отправки данных от сервера
+    std::thread sendThread(&SimplyClient::sendRequest, this);
 
-    // ожидание завершения потока reciveThread
+    // ожидание завершения потоков
     reciveThread.join();
+    sendThread.join();
 
     return EXIT_SUCCESS;
 }
@@ -69,7 +72,9 @@ void SimplyClient::getAnswer()
         auto recv_bytes = recv(_socket, (void *)buffer, BUFSIZ - 1, 0);
         if (recv_bytes <= 0)
         {
-            Logger::write("Disconnected from " + Socket::hostInfo(_socket));
+            Logger::write("Disconnected from "
+                          + Socket::hostInfo(_socket)
+                          + "\nPress any key");
             break;
         }
 

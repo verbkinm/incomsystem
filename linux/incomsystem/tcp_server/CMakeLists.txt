@@ -11,4 +11,5 @@ add_executable(tcp_server main.cpp
     client.h client.cpp
     server.h server.cpp
     ../include/socket.h ../include/socket.cpp
-    ../include/logger.h ../include/logger.cpp)
+    ../include/logger.h ../include/logger.cpp
+    ../include/baseserver.h ../include/baseserver.cpp)

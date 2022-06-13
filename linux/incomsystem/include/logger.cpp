@@ -3,15 +3,14 @@
 // создание объекта file для работы с файлом и открытие файла в режиме дозаписи
 std::ofstream Logger::_file(LOG_FILE_NAME, std::ios::app);
 std::mutex Logger::_write_mutex;
+// флаг для режима записи
+uint8_t Logger::_flags(0);
 
-Logger::Logger()
+Logger::Logger(int flags)
 {
-    auto str = "-----------------------------------\n"
-            + currentDateTime()
-            + " - Start program\n";
-
-    _file << str;
-    std::cout << str;
+    _flags = flags;
+    auto str = "Start program\n-----------------------------------\n";
+    write(str);
 }
 
 std::string Logger::currentDateTime()
@@ -27,17 +26,15 @@ std::string Logger::currentDateTime()
 
 Logger::~Logger()
 {
-    auto str = currentDateTime()
-            + " - Exit program\n-----------------------------------\n";
+    auto str = "Exit program\n-----------------------------------\n";
 
-    _file << str;
+    write(str);
     _file.close();
-    std::cout << str;
 }
 
-void Logger::init()
+void Logger::init(int flags)
 {
-    static Logger instance;
+    static Logger instance(flags);
 }
 
 void Logger::write(const std::string &str)
@@ -56,13 +53,15 @@ void Logger::write(const std::string &str)
         return;
     }
 
-    _file << result;
-    std::cout << result;
+    if (_flags & CONSOLE)
+        std::cout << result;
+    if (_flags & FILE)
+        _file << result;
 }
 
 void Logger::error(const std::string &str)
 {
-    // буфер для текстовой интерпритации ошибки
+    // буфер для текстовой интерпретации ошибки
     char buffer[BUFSIZ];
     Logger::write(str + ' ' + strerror_r(errno, &buffer[0], BUFSIZ));
 }

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <mutex>
-
+#include <string>
 #include <netdb.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <atomic>
 
 // Абстарктный класс, используется в таких классах как Client, Server, ProxyServer
 class Socket
@@ -41,17 +41,19 @@ public:
     // Метод получения информации о сокете в виде строки
     static std::string hostInfo(int sock);
 
+    // Метод получения информации о кол-ве сессий
+    uint64_t session() const;
 
 protected:
     // Хранение самого сокета
     int _socket;
+
     // Состояние сокета
-    State _state;
+    std::atomic<State> _state;
+
+    //кол-во сессий
+    std::atomic<uint64_t> _session;
 
     // Таймаут, используется для предотвращения постоянной блокировки на функциях recv
     const int SOCKET_TIMEOUT;
-
-private:
-    // мьютекс для переключения состояний сокета
-    std::mutex state_mutex;
 };

@@ -11,19 +11,24 @@ class Tests : public QObject
 public:
     Tests();
     ~Tests();
-    void initTestCase();
+
+    uint64_t _listenPort;
 
 private slots:
     void HostInfo();
+
     void ClientTestState();
     void ServerTestState();
+
     void ClientConnecedToServer();
-    void ServerAddressAlreadyUse();
+    void ServerAddressAlreadyInUse();
+
+    void CountSession();
 };
 
-Tests::Tests()
+Tests::Tests() : _listenPort(2000)
 {
-
+    Logger::init(Logger::FILE);
 }
 
 Tests::~Tests()
@@ -31,18 +36,12 @@ Tests::~Tests()
 
 }
 
-void Tests::initTestCase()
-{
-   Logger::init();
-}
-
 void Tests::HostInfo()
 {
-    uint64_t port = 2000;
-    Server server(port);
+    Server server(_listenPort);
     std::thread t1(&Server::exec, std::ref(server));
 
-    SimplyClient client("localhost", port);
+    SimplyClient client("localhost", _listenPort);
     std::thread t2(&SimplyClient::exec, std::ref(client));
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -60,35 +59,41 @@ void Tests::HostInfo()
 void Tests::ClientTestState()
 {
     Client client(-1);
-    QVERIFY2(client.state() == Socket::State::Connected, "Состояние установлено не верно");
+    QVERIFY2(client.state() == Socket::State::Connected, "Клиент не запущен");
     client.exec();
-    QVERIFY2(client.state() == Socket::State::Unconnected, "Состояние установлено не верно");
+    QVERIFY2(client.state() == Socket::State::Unconnected, "Клиент не остановлен");
 }
 
 void Tests::ServerTestState()
 {
-    Server server(2000);
-    QVERIFY2(server.state() == Socket::State::Unconnected, "Состояние установлено не верно");
+    Server server(_listenPort);
+    QVERIFY2(server.state() == Socket::State::Unconnected, "Сервер не остановлен");
+
     std::thread t1(&Server::exec, std::ref(server));
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    QVERIFY2(server.state() == Socket::State::Listening, "Состояние установлено не верно");
+
+    QVERIFY2(server.state() == Socket::State::Listening, "Сервер на запустился");
     server.stop();
     std::this_thread::sleep_for(std::chrono::seconds(4));
-    QVERIFY2(server.state() == Socket::State::Unconnected, "Состояние установлено не верно");
+
+    QVERIFY2(server.state() == Socket::State::Unconnected, "Сервер не остановлен");
+
     t1.join();
 }
 
 void Tests::ClientConnecedToServer()
 {
-    uint64_t port = 2000;
-    Server server(port);
+    Server server(_listenPort);
     std::thread t1(&Server::exec, std::ref(server));
-
-    SimplyClient client("localhost", port);
-    std::thread t2(&SimplyClient::exec, std::ref(client));
-
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    QVERIFY2(client.state() == Socket::State::Connected, "Состояние установлено не верно");
+
+    QVERIFY2(server.state() == Socket::State::Listening, "Сервер на запустился");
+
+    SimplyClient client("localhost", _listenPort);
+    std::thread t2(&SimplyClient::exec, std::ref(client));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    QVERIFY2(client.state() == Socket::State::Connected, "Клиент не запущен");
 
     client.stop();
     server.stop();
@@ -97,26 +102,56 @@ void Tests::ClientConnecedToServer()
     t2.detach();
 }
 
-void Tests::ServerAddressAlreadyUse()
+void Tests::ServerAddressAlreadyInUse()
 {
-    Server server1(2000);
+    Server server1(_listenPort);
     std::thread t1(&Server::exec, std::ref(server1));
     std::this_thread::sleep_for(std::chrono::seconds(1));
+
     QVERIFY2(server1.state() == Socket::State::Listening, "Сервер не запустился");
 
-    Server server2(2000);
+    Server server2(_listenPort);
     std::thread t2(&Server::exec, std::ref(server2));
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
     QVERIFY2(server2.state() == Socket::State::Unconnected, "Сервер запустился");
 
-    std::this_thread::sleep_for(std::chrono::seconds(3));
+    std::this_thread::sleep_for(std::chrono::seconds(4));
 
     server1.stop();
     server2.stop();
 
     t1.join();
     t2.join();
+}
+
+void Tests::CountSession()
+{
+    Server server(_listenPort);
+    QVERIFY2(server.session() == 0, "Кол-во сессий не совпадает");
+
+    std::thread t1(&Server::exec, std::ref(server));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    QVERIFY2(server.state() == Socket::State::Listening, "Сервер не запустился");
+
+    SimplyClient client("localhost", _listenPort);
+
+    std::thread t2(&SimplyClient::exec, std::ref(client));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    QVERIFY2(client.state() == Socket::State::Connected, "Клиент не запущен");
+
+    QVERIFY2(client.session() == 1, "Кол-во сессий не совпадает");
+    client.stop();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    QVERIFY2(client.session() == 0, "Кол-во сессий не совпадает");
+
+    QVERIFY2(server.session() == 0, "Кол-во сессий не совпадает");
+    server.stop();
+
+    t1.join();
+    t2.detach();
 }
 
 QTEST_APPLESS_MAIN(Tests)

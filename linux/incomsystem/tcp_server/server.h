@@ -2,9 +2,10 @@
 
 #include <thread>
 
+#include "baseserver.h"
 #include "client.h"
 
-class Server : public Socket
+class Server : public BaseServer
 {
 public:
     Server(int port);
@@ -12,10 +13,7 @@ public:
     int exec() override;
 
 private:
-    // порт, на котором сервер будет принимать соединения
-    int _port;
-
     // метод для создания новых подключенных клиентов
-    void clientThread(int socket) const;
+    void clientThread(int socket);
 };
 

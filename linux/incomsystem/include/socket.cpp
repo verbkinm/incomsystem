@@ -1,6 +1,8 @@
 #include "socket.h"
 
-Socket::Socket() : _state(Unconnected), SOCKET_TIMEOUT(3)
+Socket::Socket() : _state(Unconnected),
+    _session(0),
+    SOCKET_TIMEOUT(3)
 {
 
 }
@@ -15,7 +17,9 @@ Socket::~Socket()
 void Socket::stop()
 {
     shutdown(_socket, SHUT_RDWR);
+
     _state = Unconnected;
+    _session = 0;
 }
 
 Socket::State Socket::state() const
@@ -49,4 +53,9 @@ std::string Socket::hostInfo(int sock)
             + inet_ntop(AF_INET, &src_addr.sin_addr, client_address_buf, BUFSIZ)
             + ':'
             + std::to_string(ntohs(src_addr.sin_port));
+}
+
+uint64_t Socket::session() const
+{
+    return _session;
 }
